@@ -31,6 +31,65 @@ class KeychainViewSet(viewsets.ModelViewSet):
         ),
     )
 
+    @action(detail=False, methods=['post'])
+    def init(self, request):
+        print(self)
+        print(request)
+        return Response(
+            KeychainSerializer(
+                Keychain.init(
+                    user = request.user
+                    password = request.data['password']
+                ).data
+            )
+        )
+
+    @action(detail=False, methods=['post'])
+    def load(self, request):
+        return Response(
+            KeychainSerializer(
+                Keychain.load(
+                    user = request.user
+                    password = request.data['password']
+                    representation = request.data['keys']
+                    trustedDataCheck = request.data['sha256']
+                ).data
+            )
+        )
+
+    @action(detail=True, methods=['post'])
+    def dump(self, request):
+        keychain = self.get_object()
+        return keychain.dump()
+
+    @action(detail=True, methods=['post'])
+    def setKey(self, request):
+        keychain = self.get_object()
+        return Response(
+            keychain.setKey(
+                name = request.data['name']
+                value = request.data['value']
+            )
+        )
+
+    @action(detail=True, methods=['post'])
+    def get(self, request):
+        keychain = self.get_object()
+        return Response(
+            keychain.get(
+                name = request.data['name']
+            )
+        )
+
+    @action(detail=False, methods=['post'])
+    def remove(self, request):
+        keychain = self.get_object()
+        return Response(
+            keychain.remove(
+                name = request.data['name']
+            )
+        )
+
 
 class KeyViewSet(viewsets.ModelViewSet):
     queryset = Key.objects.all()
