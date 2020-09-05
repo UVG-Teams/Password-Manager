@@ -3,6 +3,9 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
 
+class CorruptError(Exception):
+    pass
+
 class Keychain(models.Model):
     user = models.ForeignKey(
         User,
@@ -17,7 +20,6 @@ class Keychain(models.Model):
         blank = False,
     )
 
-    
     # Este método deberá crear un nuevo objeto de clave-valor. Esta función es responsable de generar las llaves necesarias 
     # para proveer varias funcionalidades dentro del manejador de contraseñas. Una vez iniciado, el manejador de contraseñas 
     # deberá estar listo para soportar otras funcionalidades descritas en esta parte.
@@ -32,19 +34,27 @@ class Keychain(models.Model):
     # Si el parámetro trustedDataCheck es dado, esta función deberá también afirmar la integridad de los objetos clave-valor. 
     # Si una manipulación es detectada, esta función deberá lanzar un error o excepción. Si todo pasa bien, esta función deberá 
     # regresar el valor booleano verdadero y el manejador junto con el conjunto de aplicación-contraseñas deberán estar listos 
-    # para soportar las otras funcionalidades descritas en el API. Si la contraseña dada es inválida, 
-    # la función regresará el valor booleano falso. Si este método es llamado con la contraseña maestra equivocada, 
+    # para soportar las otras funcionalidades descritas en el API. Si este método es llamado con la contraseña maestra equivocada,
     # su código debe regresar el valor booleano de falso, y no se deberán poder realizar ninguna otra consulta 
-    # (keychain.get, keychain.set o keychain.remove) dentro del manejador de contraseñas a menos que el cliente 
-    # llame al método keychain.init o exitosamente llame a keychain.load. Es totalmente incorrecto pretender que nada
-    # está mal con una contraseña master equivocada en este método y que luego simplemente falle al responder las consultas.
-    def load(self, password, representation, trustedDataCheck):
-        # password: Contraseña usada para autenticar el conjunto de aplicación contraseñas (string)
-        # representation: Objeto (clave-valor) serialización codificada del conjunto de aplicación-contraseñas (string)
-        # trustedDataCheck: SHA-256 hash del conjunto de aplicación-contraseñas; 
-        #   noten que este es un parámetroopcional, que es usado para verificar la integridad del manejador de contraseñas (string)
-        # return: booleano
-        pass
+    # (keychain.get, keychain.set o keychain.remove) dentro del manejador de contraseñas.
+    @staticmethod
+    def load(self, user, password, representation, trustedDataCheck=None):
+        if trustedDataCheck:
+            try:
+                if hash(representation) != trustedDataCheck:
+                    raise CorruptError
+            except CorruptError:
+                print('The representation was corrupted')
+
+        # Verificar si la contrase;a es valida para la representacion(keys)
+
+        if password:
+            keychain = Keychain.objects.create(user=user, password=password)
+            for name, value in representation:
+                keychain.setKey(name, value)
+            return True, keychain
+
+        return False, None
 
 
     # Si el conjunto de aplicación-contraseñas no se ha iniciado o no se ha cargado correctamente en la memoria, 
@@ -53,9 +63,13 @@ class Keychain(models.Model):
     # posterior a keychain.load. Deberá regresar un ​array ​que consta de esto, y también del hash SHA-256 del contenido
     # del conjunto de aplicación-contraseñas (que se guardará en un almacenamiento confiable y se usará para evitar ataques de ​rollback​).
     def dump(self):
-        # return: Un ​array​ que tiene dos componentes, el primero es un objeto de clave-valor serializado y codificadodel 
-        #   conjunto de aplicación-contraseñas, y el segundo es un hash SHA-256 del contenido del conjunto deaplicación-contraseñas.
-        pass
+        keys_set = self.key_set.all()
+        keys = {}
+
+        for key in keys_set:
+            keys[key.application] = key.value
+
+        return keys, hash(keys)
 
 
     # Si el conjunto de aplicación-contraseñas no ha sido iniciado o cargado a memoria exitosamente, este método
