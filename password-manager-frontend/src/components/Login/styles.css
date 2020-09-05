@@ -1,0 +1,52 @@
+.page {
+    height: 100vh;
+    background-color: #174280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loginForm {
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+    height: 30%;
+    background-color: white;
+    border-radius: 15px;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 1px 1px 5px 2px black;
+}
+
+input {
+    border-radius: 5px;
+    font-size: 15px;
+    border: solid 1px black;
+    padding: 5px;
+    margin-top: 5px;
+    background-color: #e0dede;
+}
+
+label {
+    font-size: 20px;
+}
+
+button {
+    margin-top: 40px;
+    font-size: 15px;
+    border-radius: 5px;
+    border: none;
+    padding: 10px;
+    width: 40%;
+    background-color: #333333;
+    color: white;
+}
+
+.user, .pass {
+    display: flex;
+    flex-direction: column;
+}
+
+.pass {
+    margin-top: 15px;
+}
