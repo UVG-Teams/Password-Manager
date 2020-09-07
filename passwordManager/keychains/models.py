@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-
+import hashlib
+import hmac
+import json
 
 class CorruptError(Exception):
     pass
@@ -38,19 +40,19 @@ class Keychain(models.Model):
     # su código debe regresar el valor booleano de falso, y no se deberán poder realizar ninguna otra consulta 
     # (keychain.get, keychain.set o keychain.remove) dentro del manejador de contraseñas.
     @staticmethod
-    def load(self, user, password, representation, trustedDataCheck=None):
+    def load( user, password, representation, trustedDataCheck=None):
         if trustedDataCheck:
             try:
-                if hash(representation) != trustedDataCheck:
+                if hmac.new(key = bytes(password , 'utf-8'), msg = bytes(str(representation) , 'utf-8') , digestmod = hashlib.sha256).hexdigest() != trustedDataCheck:
                     raise CorruptError
             except CorruptError:
                 print('The representation was corrupted')
 
         # Verificar si la contrase;a es valida para la representacion(keys)
-
+        representationJson= json.loads(str(representation).replace("\'","\""))
         if password:
             keychain = Keychain.objects.create(user=user, password=password)
-            for name, value in representation:
+            for name, value in representation.items():
                 keychain.setKey(name, value)
             return True, keychain
 
@@ -65,11 +67,14 @@ class Keychain(models.Model):
     def dump(self):
         keys_set = self.key_set.all()
         keys = {}
-
+        
         for key in keys_set:
-            keys[key.application] = key.value
-
-        return keys, hash(keys)
+            keys[key.application] = key.password
+        # Para pasar de dict a string (keys es un dict  ):
+        # str(keys)
+        # Para pasar de string a dict:
+        # json.loads(str(keys).replace("\'","\""))
+        return keys, hmac.new(key = bytes(self.password , 'utf-8'), msg = bytes(str(keys) , 'utf-8') , digestmod = hashlib.sha256).hexdigest()
 
 
     # Si el conjunto de aplicación-contraseñas no ha sido iniciado o cargado a memoria exitosamente, este método
