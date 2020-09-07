@@ -38,7 +38,7 @@ class KeychainViewSet(viewsets.ModelViewSet):
         return Response(
             KeychainSerializer(
                 Keychain.init(
-                    user = request.user
+                    user = request.user,
                     password = request.data['password']
                 ).data
             )
@@ -49,9 +49,9 @@ class KeychainViewSet(viewsets.ModelViewSet):
         return Response(
             KeychainSerializer(
                 Keychain.load(
-                    user = request.user
-                    password = request.data['password']
-                    representation = request.data['keys']
+                    user = request.user,
+                    password = request.data['password'],
+                    representation = request.data['keys'],
                     trustedDataCheck = request.data['sha256']
                 ).data
             )
@@ -67,7 +67,7 @@ class KeychainViewSet(viewsets.ModelViewSet):
         keychain = self.get_object()
         return Response(
             keychain.setKey(
-                name = request.data['name']
+                name = request.data['name'],
                 value = request.data['value']
             )
         )
