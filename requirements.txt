@@ -5,7 +5,7 @@ Django==3.1.1
 django-filter==2.3.0
 djangorestframework==3.11.1
 djangorestframework-jwt==1.11.0
-ipython==7.18.1
+ipython
 ipython-genutils==0.2.0
 jedi==0.17.2
 parso==0.7.1
@@ -18,5 +18,5 @@ Pygments==2.6.1
 PyJWT==1.7.1
 pytz==2020.1
 sqlparse==0.3.1
-traitlets==5.0.3
+traitlets
 wcwidth==0.2.5
