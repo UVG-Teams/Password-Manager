@@ -1,33 +1,33 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+import os
+from backports.pbkdf2 import pbkdf2_hmac
 import hashlib
 import hmac
 import json
+
 
 class CorruptError(Exception):
     pass
 
 class Keychain(models.Model):
-    user = models.ForeignKey(
-        User,
+    salt = models.CharField(
+        max_length = 250,
         null = False,
         blank = False,
-        on_delete = models.CASCADE,
     )
 
-    password = models.CharField(
-        max_length = 200,
-        null = False,
-        blank = False,
-    )
+    password = None
 
     # Este método deberá crear un nuevo objeto de clave-valor. Esta función es responsable de generar las llaves necesarias 
     # para proveer varias funcionalidades dentro del manejador de contraseñas. Una vez iniciado, el manejador de contraseñas 
     # deberá estar listo para soportar otras funcionalidades descritas en esta parte.
     @staticmethod
-    def init(user, password):
-        return Keychain.objects.create(user=user, password=password)
+    def init(password):
+        salt = os.urandom(64)
+        keychain = Keychain.objects.create(salt=salt)
+        keychain.password = pbkdf2_hmac("sha256", password.encode("utf8"), salt, 50000, 64)
+        return keychain
 
 
     # Este método carga el estado del manejador (conjunto de aplicación-contraseñas) de una representación serializada. 
@@ -40,10 +40,10 @@ class Keychain(models.Model):
     # su código debe regresar el valor booleano de falso, y no se deberán poder realizar ninguna otra consulta 
     # (keychain.get, keychain.set o keychain.remove) dentro del manejador de contraseñas.
     @staticmethod
-    def load( user, password, representation, trustedDataCheck=None):
+    def load(password, representation, trustedDataCheck=None):
         if trustedDataCheck:
             try:
-                if hmac.new(key = bytes(password , 'utf-8'), msg = bytes(str(representation) , 'utf-8') , digestmod = hashlib.sha256).hexdigest() != trustedDataCheck:
+                if Keychain.hmac_sha256(msg=representation, key=password) != trustedDataCheck:
                     raise CorruptError
             except CorruptError:
                 print('The representation was corrupted')
@@ -51,7 +51,7 @@ class Keychain(models.Model):
         # Verificar si la contrase;a es valida para la representacion(keys)
         representationJson= json.loads(str(representation).replace("\'","\""))
         if password:
-            keychain = Keychain.objects.create(user=user, password=password)
+            keychain = Keychain.objects.create(salt=password)
             for name, value in representation.items():
                 keychain.setKey(name, value)
             return True, keychain
@@ -67,15 +67,14 @@ class Keychain(models.Model):
     def dump(self):
         keys_set = self.key_set.all()
         keys = {}
-        
+
         for key in keys_set:
             keys[key.application] = key.password
         # Para pasar de dict a string (keys es un dict  ):
         # str(keys)
         # Para pasar de string a dict:
         # json.loads(str(keys).replace("\'","\""))
-        return keys, hmac.new(key = bytes(self.password , 'utf-8'), msg = bytes(str(keys) , 'utf-8') , digestmod = hashlib.sha256).hexdigest()
-
+        return keys, Keychain.hmac_sha256(msg=keys, key=self.password)
 
     # Si el conjunto de aplicación-contraseñas no ha sido iniciado o cargado a memoria exitosamente, este método
     # debería lanzar una excepción o error. Caso contrario, este método deberá insertar el nombre de la aplicación y los
@@ -85,11 +84,15 @@ class Keychain(models.Model):
     def setKey(self, name, value):
         keys = self.key_set.all()
         try:
-            key = keys.get(application=name)
+            key = keys.get(application = Keychain.hmac_sha256(name, self.password))
             key.password = value
             key.save()
         except ObjectDoesNotExist:
-            Key.objects.create(application=name, password=value, keychain=self)
+            Key.objects.create(
+                application = Keychain.hmac_sha256(name, self.password),
+                password = value,
+                keychain = self
+            )
         return None
 
 
@@ -100,7 +103,7 @@ class Keychain(models.Model):
     def get(self, name):
         keys = self.key_set.all()
         try:
-            key = keys.get(application=name)
+            key = keys.get(application = Keychain.hmac_sha256(name, self.password))
             return key.password
         except ObjectDoesNotExist:
             return None
@@ -113,11 +116,19 @@ class Keychain(models.Model):
     def remove(self, name):
         keys = self.key_set.all()
         try:
-            key = keys.get(application=name)
+            key = keys.get(application = Keychain.hmac_sha256(name, self.password))
             key.delete()
             return True
         except ObjectDoesNotExist:
             return False
+
+    @staticmethod
+    def hmac_sha256(msg, key):
+        return hmac.new(
+            msg = bytes(str(msg), 'utf-8'),
+            key = bytes(str(key), 'utf-8'),
+            digestmod = hashlib.sha256
+        ).hexdigest()
 
 
 class Key(models.Model):
