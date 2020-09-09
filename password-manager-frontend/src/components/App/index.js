@@ -8,7 +8,7 @@ import Manager from '../Manager';
 const App = () => (
     <div className = "App">
         <div>
-            <Login/>
+            <Manager/>
         </div>
     </div>
 );

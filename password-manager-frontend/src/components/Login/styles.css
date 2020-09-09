@@ -31,7 +31,7 @@ label {
     font-size: 20px;
 }
 
-button {
+/* button {
     margin-top: 40px;
     font-size: 15px;
     border-radius: 5px;
@@ -40,7 +40,7 @@ button {
     width: 40%;
     background-color: #333333;
     color: white;
-}
+} */
 
 .user, .pass {
     display: flex;
