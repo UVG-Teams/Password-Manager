@@ -98,9 +98,9 @@ class Keychain(models.Model):
 
         try:
             key = keys.get(application = Keychain.hmac_sha256(name, self.derived_password))
-            key.password_cipher = cipher,
-            key.password_nonce = nonce,
-            key.password_tag = tag,
+            key.password_cipher = cipher
+            key.password_nonce = nonce
+            key.password_tag = tag
             key.save()
         except ObjectDoesNotExist:
             Key.objects.create(
@@ -145,9 +145,9 @@ class Keychain(models.Model):
 
         try:
             key = keys.get(application = name)
-            key.password_cipher = cipher,
-            key.password_nonce = nonce,
-            key.password_tag = tag,
+            key.password_cipher = cipher
+            key.password_nonce = nonce
+            key.password_tag = tag
             key.save()
         except ObjectDoesNotExist:
             Key.objects.create(
