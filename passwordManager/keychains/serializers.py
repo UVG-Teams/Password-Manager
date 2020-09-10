@@ -2,13 +2,15 @@ from rest_framework import serializers
 
 from keychains.models import Keychain, Key
 
-class KeychainSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Keychain
-        fileds = '__all__'
-
 
 class KeySerializer(serializers.ModelSerializer):
     class Meta:
         model = Key
-        fileds = '__all__'
+        fields = "__all__"
+
+
+class KeychainSerializer(serializers.ModelSerializer):
+    keys = KeySerializer(many=True, read_only=True)
+    class Meta:
+        model = Keychain
+        fields = "__all__"

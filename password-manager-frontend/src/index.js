@@ -6,6 +6,7 @@ import './index.css';
 // import './normalize.css';
 
 ReactDOM.render(
-  <App />,
-  document.getElementById('root'),
+    <App />,
+    document.getElementById('root'),
 );
+  

@@ -20,28 +20,30 @@ class KeychainViewSet(viewsets.ModelViewSet):
                 'base': {
                     'create': True,
                     'list': True,
+                    'init_keychain': True,
+                    'load': True,
                 },
                 'instance': {
                     'retrieve': True,
                     'update': True,
                     'partial_update': True,
                     'destroy': True,
+                    'dump': True,
+                    'setKey': True,
+                    'get': True,
+                    'remove': True,
                 }
             }
         ),
     )
 
     @action(detail=False, methods=['post'])
-    def init(self, request):
-        print(self)
-        print(request)
+    def init_keychain(self, request):
+        password = request.data['password']
         return Response(
             KeychainSerializer(
-                Keychain.init(
-                    user = request.user,
-                    password = request.data['password']
-                ).data
-            )
+                Keychain.init(password = password)
+            ).data
         )
 
     @action(detail=False, methods=['post'])
@@ -49,12 +51,11 @@ class KeychainViewSet(viewsets.ModelViewSet):
         return Response(
             KeychainSerializer(
                 Keychain.load(
-                    user = request.user,
                     password = request.data['password'],
                     representation = request.data['keys'],
                     trustedDataCheck = request.data['sha256']
-                ).data
-            )
+                )
+            ).data
         )
 
     @action(detail=True, methods=['post'])
@@ -63,14 +64,15 @@ class KeychainViewSet(viewsets.ModelViewSet):
         return keychain.dump()
 
     @action(detail=True, methods=['post'])
-    def setKey(self, request):
+    def setKey(self, request, pk=None):
         keychain = self.get_object()
-        return Response(
-            keychain.setKey(
-                name = request.data['name'],
-                value = request.data['value']
-            )
-        )
+        keychain_password = request.data['keychain_password']
+        salt = request.data['salt']
+        name = request.data['name']
+        value = request.data['value']
+        # if keychain.set_keychain_password(keychain_password, salt):
+        keychain.setKey(name, value)
+        return Response({})
 
     @action(detail=True, methods=['post'])
     def get(self, request):
