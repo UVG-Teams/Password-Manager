@@ -18,23 +18,6 @@ const byId = (state = {}, action) => {
             
             return newState;
         }
-        case types.ADD_KEY_STARTED: {
-            const newState = { ...state };
-            newState[action.payload.id] = {
-                ...action.payload,
-                isConfirmed: false,
-            };
-            return newState;
-        }
-        case types.ADD_KEY_COMPLETED: {
-            const { tempId, key } = action.payload;
-            const newState = omit(state, tempId);
-            newState[key.id] = {
-                ...key,
-                isConfirmed: true,
-            };
-            return newState;
-        }
         case types.REMOVE_KEY_STARTED: {
             return omit(state, action.payload.id);
         }
@@ -48,13 +31,6 @@ const order = (state = [], action) => {
     switch(action.type) {
         case types.FETCH_KEYS_COMPLETED: {
             return [...action.payload.order];
-        }
-        case types.ADD_KEY_STARTED: {
-            return [...state, action.payload.id];
-        }
-        case types.ADD_KEY_COMPLETED: {
-            const { tempId, key } = action.payload;
-            return state.map(id => id === tempId ? key.id : id);
         }
         case types.REMOVE_KEY_STARTED: {
             return state.filter(id => id !== action.payload.id);

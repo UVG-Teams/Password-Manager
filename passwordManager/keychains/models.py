@@ -228,12 +228,6 @@ class Keychain(models.Model):
         decrypted = aesCipher.decrypt_and_verify(ciphertext, authTag)
         return decrypted
 
-    def set_keychain_password(self, password, salt):
-        # salt = Keychain.get_salts()[trustedDataCheck].encode("ISO-8859-1")
-        # derived_password = pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 50000, 64)
-        # self.derived_password = derived_password
-        pass
-
 
 class Key(models.Model):
     application = models.CharField(

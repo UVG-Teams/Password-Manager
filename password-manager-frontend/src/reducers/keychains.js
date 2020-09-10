@@ -4,7 +4,7 @@ import { combineReducers } from 'redux';
 import * as types from '../types/keychains';
 
 
-const keychain = (state = {}, action) => {
+const keychain = (state = null, action) => {
     switch(action.type) {
         case types.INIT_KEYCHAIN_STARTED: {
             return {

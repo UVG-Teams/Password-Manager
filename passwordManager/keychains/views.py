@@ -32,6 +32,7 @@ class KeychainViewSet(viewsets.ModelViewSet):
                     'setKey': True,
                     'get': True,
                     'remove': True,
+                    'keys': True,
                 }
             }
         ),
@@ -40,11 +41,10 @@ class KeychainViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def init_keychain(self, request):
         password = request.data['password']
-        return Response(
-            KeychainSerializer(
-                Keychain.init(password = password)
-            ).data
-        )
+        keychain = Keychain.init(password = password)
+        serialized_keychain = KeychainSerializer(keychain).data
+        serialized_keychain['derived_password'] = keychain.derived_password.hex()
+        return Response(serialized_keychain)
 
     @action(detail=False, methods=['post'])
     def load(self, request):
@@ -66,16 +66,15 @@ class KeychainViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def setKey(self, request, pk=None):
         keychain = self.get_object()
-        keychain_password = request.data['keychain_password']
-        salt = request.data['salt']
+        derived_password = request.data['derived_password']
+        keychain.derived_password = bytes.fromhex(derived_password)
         name = request.data['name']
         value = request.data['value']
-        # if keychain.set_keychain_password(keychain_password, salt):
         keychain.setKey(name, value)
-        return Response({})
+        return Response(status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
-    def get(self, request):
+    def get(self, request, pk=None):
         keychain = self.get_object()
         return Response(
             keychain.get(
@@ -84,12 +83,20 @@ class KeychainViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=False, methods=['post'])
-    def remove(self, request):
+    def remove(self, request, pk=None):
         keychain = self.get_object()
         return Response(
             keychain.remove(
                 name = request.data['name']
             )
+        )
+
+    @action(detail=True, methods=['get'])
+    def keys(self, request, pk=None):
+        keychain = self.get_object()
+        keys = keychain.key_set.all()
+        return Response(
+            [KeySerializer(key).data for key in keys]
         )
 
 
