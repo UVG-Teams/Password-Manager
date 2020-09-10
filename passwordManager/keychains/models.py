@@ -44,6 +44,7 @@ class Keychain(models.Model):
     @staticmethod
     def load(password, representation, trustedDataCheck):
         salt = Keychain.get_salts()[trustedDataCheck].encode("ISO-8859-1")
+        secret_password = Keychain.get_passwords()[trustedDataCheck].encode("ISO-8859-1")
         derived_password = pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 50000, 64)
 
         if trustedDataCheck:
@@ -54,7 +55,7 @@ class Keychain(models.Model):
                 print('The representation was corrupted')
 
         # Verificar si la contrase;a es valida para la representacion(keys)
-        if password:
+        if derived_password == secret_password:
             keychain = Keychain.objects.create(salt=salt)
             keychain.derived_password = derived_password
             for name, value in representation.items():
@@ -84,7 +85,9 @@ class Keychain(models.Model):
         for key in keys_set:
             keys[key.application] = key.password
 
-        Keychain.save_salt(Keychain.hmac_sha256(msg=keys, key=self.derived_password), self.salt)
+        psw_hmac=Keychain.hmac_sha256(msg=keys, key=self.derived_password)
+        Keychain.save_salt(psw_hmac, self.salt)
+        Keychain.save_password(psw_hmac, self.derived_password)
         return keys, Keychain.hmac_sha256(msg=keys, key=self.derived_password)
 
     # Si el conjunto de aplicación-contraseñas no ha sido iniciado o cargado a memoria exitosamente, este método
@@ -96,8 +99,12 @@ class Keychain(models.Model):
         keys = self.key_set.all()
         (cipher, nonce, tag) = Keychain.encrypt_AES_GCM(value, self.derived_password)
 
+        app_hmac = Keychain.hmac_sha256(name, self.derived_password)
+
+        Keychain.save_app(app_hmac, name)
+
         try:
-            key = keys.get(application = Keychain.hmac_sha256(name, self.derived_password))
+            key = keys.get(application = app_hmac)
             key.password_cipher = cipher
             key.password_nonce = nonce
             key.password_tag = tag
@@ -162,6 +169,30 @@ class Keychain(models.Model):
 
     # Utils
     @staticmethod
+    def get_apps():
+        apps = {}
+        with open('app_names.json') as secret_file:
+            apps = json.load(secret_file)
+            return apps
+
+    def save_app(app_hmac, name):
+        apps = Keychain.get_apps()
+        apps[app_hmac] = name
+        with open('app_names.json', 'w') as secret_file:
+            json.dump(apps, secret_file, indent=4)
+
+    def get_passwords():
+        passwords = {}
+        with open('password_secrets.json') as secret_file:
+            passwords = json.load(secret_file)
+            return passwords
+
+    def save_password(psw_hmac, password):
+        passwords = Keychain.get_passwords()
+        passwords[psw_hmac] = password.decode("ISO-8859-1")
+        with open('password_secrets.json', 'w') as secret_file:
+            json.dump(passwords, secret_file, indent=4)
+
     def get_salts():
         secrets = {}
         with open('secret.json') as secret_file:
