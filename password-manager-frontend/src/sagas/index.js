@@ -7,6 +7,8 @@ import {
 import {
     watchSetKey,
     watchFetchKeys,
+    watchGetKeyPassword,
+    watchRemoveKey,
 } from './keys'
 
 function* mainSaga(){
@@ -14,6 +16,8 @@ function* mainSaga(){
         fork(watchCreateKeychain),
         fork(watchSetKey),
         fork(watchFetchKeys),
+        fork(watchGetKeyPassword),
+        fork(watchRemoveKey),
     ])
 }
 

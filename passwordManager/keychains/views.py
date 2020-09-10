@@ -66,6 +66,7 @@ class KeychainViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def setKey(self, request, pk=None):
         keychain = self.get_object()
+        # Se autentica para poder realizar acciones por medio del API
         derived_password = request.data['derived_password']
         keychain.derived_password = bytes.fromhex(derived_password)
         name = request.data['name']
@@ -76,18 +77,26 @@ class KeychainViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def get(self, request, pk=None):
         keychain = self.get_object()
+        name = request.data['keyName']
+        # Se autentica para poder realizar acciones por medio del API
+        derived_password = request.data['derived_password']
+        keychain.derived_password = bytes.fromhex(derived_password)
         return Response(
             keychain.get(
-                name = request.data['name']
+                name = name
             )
         )
 
-    @action(detail=False, methods=['post'])
+    @action(detail=True, methods=['post'])
     def remove(self, request, pk=None):
         keychain = self.get_object()
+        name = request.data['keyName']
+        # Se autentica para poder realizar acciones por medio del API
+        derived_password = request.data['derived_password']
+        keychain.derived_password = bytes.fromhex(derived_password)
         return Response(
             keychain.remove(
-                name = request.data['name']
+                name = name
             )
         )
 

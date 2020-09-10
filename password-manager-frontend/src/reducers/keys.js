@@ -18,9 +18,6 @@ const byId = (state = {}, action) => {
             
             return newState;
         }
-        case types.REMOVE_KEY_STARTED: {
-            return omit(state, action.payload.id);
-        }
         default: {
             return state;
         }
@@ -31,9 +28,6 @@ const order = (state = [], action) => {
     switch(action.type) {
         case types.FETCH_KEYS_COMPLETED: {
             return [...action.payload.order];
-        }
-        case types.REMOVE_KEY_STARTED: {
-            return state.filter(id => id !== action.payload.id);
         }
         default: {
             return state;
