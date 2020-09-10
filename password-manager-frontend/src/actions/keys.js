@@ -28,12 +28,8 @@ export const startAddingKey = key => ({
     payload: key
 });
 
-export const completeAddingKey = (tempId, key) => ({
+export const completeAddingKey = () => ({
     type: types.ADD_KEY_COMPLETED,
-    payload: {
-        tempId,
-        key,
-    },
 });
 
 export const failAddingKey = (tempId, error) => ({

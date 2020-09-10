@@ -30,7 +30,6 @@ function* createKeychain(action){
         )
         if (http.isSuccessful(response.status)) {
             const jsonResult = yield response.json();
-            console.log(jsonResult)
             yield put(actions.completeInitializingKeychain(jsonResult));
         } else {
             const { non_field_errors } = yield response.json;

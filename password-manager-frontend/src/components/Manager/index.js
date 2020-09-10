@@ -8,6 +8,9 @@ import * as selectors from '../../reducers'
 import './styles.css';
 
 const Manager = ({
+    keychain,
+    keys,
+    isLoading,
     initKeychain,
     setKey,
     getKeyPassword,
@@ -100,28 +103,47 @@ const Manager = ({
                 </button>
             </div>
         </div>
-        <div className="tableView">
-            <table>
-                <tr>
-                    <th>Aplicación</th>
-                    <th>Contraseña</th>
-                </tr>
-                <tr>
-                    <td>www.hi5.com</td>
-                    <td>12345</td>
-                </tr>
-                <tr>
-                    <td>www.myspace.com</td>
-                    <td>abc123</td>
-                </tr>
-            </table>
-        </div>
+        {
+            keychain ? (
+                <div className="tableView">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Aplicación</th>
+                                <th>Contraseña</th>
+                            </tr>
+                        </thead>
+                        {
+                            console.log(keys)
+                        }
+                        {
+                            keys.length > 0 && !isLoading && (
+                                <tbody>
+                                    {
+                                        keys.map(key =>
+                                            <tr key={ key.id }>
+                                                <th>{ key.application }</th>
+                                                <th>{ key.password_cipher + key.password_nonce + key.password_tag}</th>
+                                            </tr>
+                                        )
+                                    }
+                                </tbody>
+                            )
+                        }
+                    </table>
+                </div>
+            ) : (
+                <></>
+            )
+        }
     </div>
 )};
 
 export default connect(
     state => ({
-        keychain: selectors.getKeychain(state)
+        keychain: selectors.getKeychain(state),
+        keys: selectors.getKeys(state),
+        isLoading: selectors.isFetchingKeys(state),
     }),
     dispatch => ({
         initKeychain(password) {

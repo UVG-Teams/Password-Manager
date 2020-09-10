@@ -10,7 +10,9 @@ class KeySerializer(serializers.ModelSerializer):
 
 
 class KeychainSerializer(serializers.ModelSerializer):
-    keys = KeySerializer(many=True, read_only=True)
+    # keys = KeySerializer(many=True, read_only=True)
     class Meta:
         model = Keychain
-        fields = "__all__"
+        fields = (
+            "id",
+        )

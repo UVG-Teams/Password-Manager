@@ -6,12 +6,14 @@ import {
 
 import {
     watchSetKey,
+    watchFetchKeys,
 } from './keys'
 
 function* mainSaga(){
     yield all([
         fork(watchCreateKeychain),
-        fork(watchSetKey)
+        fork(watchSetKey),
+        fork(watchFetchKeys),
     ])
 }
 
