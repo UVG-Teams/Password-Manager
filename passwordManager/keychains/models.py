@@ -1,31 +1,35 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from backports.pbkdf2 import pbkdf2_hmac
+from Crypto.Cipher import AES
+from base64 import b64encode
+import os, binascii
+import hashlib
+import hmac
+import json
 
 
 class CorruptError(Exception):
     pass
 
 class Keychain(models.Model):
-    user = models.ForeignKey(
-        User,
+    salt = models.CharField(
+        max_length = 250,
         null = False,
         blank = False,
-        on_delete = models.CASCADE,
     )
 
-    password = models.CharField(
-        max_length = 200,
-        null = False,
-        blank = False,
-    )
+    derived_password = None
 
     # Este método deberá crear un nuevo objeto de clave-valor. Esta función es responsable de generar las llaves necesarias 
     # para proveer varias funcionalidades dentro del manejador de contraseñas. Una vez iniciado, el manejador de contraseñas 
     # deberá estar listo para soportar otras funcionalidades descritas en esta parte.
     @staticmethod
-    def init(user, password):
-        return Keychain.objects.create(user=user, password=password)
+    def init(password):
+        salt = os.urandom(64)
+        keychain = Keychain.objects.create(salt=salt)
+        keychain.derived_password = pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 50000, 64)
+        return keychain
 
 
     # Este método carga el estado del manejador (conjunto de aplicación-contraseñas) de una representación serializada. 
@@ -38,20 +42,31 @@ class Keychain(models.Model):
     # su código debe regresar el valor booleano de falso, y no se deberán poder realizar ninguna otra consulta 
     # (keychain.get, keychain.set o keychain.remove) dentro del manejador de contraseñas.
     @staticmethod
-    def load(self, user, password, representation, trustedDataCheck=None):
+    def load(password, representation, trustedDataCheck):
+        salt = Keychain.get_salts()[trustedDataCheck].encode("ISO-8859-1")
+        derived_password = pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 50000, 64)
+
         if trustedDataCheck:
             try:
-                if hash(representation) != trustedDataCheck:
+                if Keychain.hmac_sha256(msg=representation, key=derived_password) != trustedDataCheck:
                     raise CorruptError
             except CorruptError:
                 print('The representation was corrupted')
 
         # Verificar si la contrase;a es valida para la representacion(keys)
-
         if password:
-            keychain = Keychain.objects.create(user=user, password=password)
-            for name, value in representation:
-                keychain.setKey(name, value)
+            keychain = Keychain.objects.create(salt=salt)
+            keychain.derived_password = derived_password
+            for name, value in representation.items():
+                decrypted = Keychain.decrypt_AES_GCM(
+                    (
+                        bytes.fromhex(value[0]),
+                        bytes.fromhex(value[1]),
+                        bytes.fromhex(value[2])
+                    ),
+                    derived_password[:32]
+                )
+                keychain.loadKey(name, decrypted.decode("utf-8"))
             return True, keychain
 
         return False, None
@@ -67,10 +82,10 @@ class Keychain(models.Model):
         keys = {}
 
         for key in keys_set:
-            keys[key.application] = key.value
+            keys[key.application] = key.password
 
-        return keys, hash(keys)
-
+        Keychain.save_salt(Keychain.hmac_sha256(msg=keys, key=self.derived_password), self.salt)
+        return keys, Keychain.hmac_sha256(msg=keys, key=self.derived_password)
 
     # Si el conjunto de aplicación-contraseñas no ha sido iniciado o cargado a memoria exitosamente, este método
     # debería lanzar una excepción o error. Caso contrario, este método deberá insertar el nombre de la aplicación y los
@@ -79,12 +94,22 @@ class Keychain(models.Model):
     # No se puede usar set ya que es una palabra reservada de python
     def setKey(self, name, value):
         keys = self.key_set.all()
+        (cipher, nonce, tag) = Keychain.encrypt_AES_GCM(value, self.derived_password)
+
         try:
-            key = keys.get(application=name)
-            key.password = value
+            key = keys.get(application = Keychain.hmac_sha256(name, self.derived_password))
+            key.password_cipher = cipher
+            key.password_nonce = nonce
+            key.password_tag = tag
             key.save()
         except ObjectDoesNotExist:
-            Key.objects.create(application=name, password=value, keychain=self)
+            Key.objects.create(
+                application = Keychain.hmac_sha256(name, self.derived_password),
+                password_cipher = cipher,
+                password_nonce = nonce,
+                password_tag = tag,
+                keychain = self
+            )
         return None
 
 
@@ -95,8 +120,8 @@ class Keychain(models.Model):
     def get(self, name):
         keys = self.key_set.all()
         try:
-            key = keys.get(application=name)
-            return key.password
+            key = keys.get(application = Keychain.hmac_sha256(name, self.derived_password))
+            return key.decrypted_password
         except ObjectDoesNotExist:
             return None
 
@@ -108,11 +133,75 @@ class Keychain(models.Model):
     def remove(self, name):
         keys = self.key_set.all()
         try:
-            key = keys.get(application=name)
+            key = keys.get(application = Keychain.hmac_sha256(name, self.derived_password))
             key.delete()
             return True
         except ObjectDoesNotExist:
             return False
+
+
+    def loadKey(self, name, value):
+        keys = self.key_set.all()
+        (cipher, nonce, tag) = Keychain.encrypt_AES_GCM(value, self.derived_password)
+
+        try:
+            key = keys.get(application = name)
+            key.password_cipher = cipher
+            key.password_nonce = nonce
+            key.password_tag = tag
+            key.save()
+        except ObjectDoesNotExist:
+            Key.objects.create(
+                application = name,
+                password_cipher = cipher,
+                password_nonce = nonce,
+                password_tag = tag,
+                keychain = self
+            )
+        return None
+
+
+    # Utils
+    @staticmethod
+    def get_salts():
+        secrets = {}
+        with open('secret.json') as secret_file:
+            secrets = json.load(secret_file)
+            return secrets
+
+    @staticmethod
+    def save_salt(keys_hmac, salt):
+        secrets = Keychain.get_salts()
+        secrets[keys_hmac] = salt.decode("ISO-8859-1")
+        with open('secret.json', 'w') as secret_file:
+            json.dump(secrets, secret_file, indent=4)
+
+    @staticmethod
+    def hmac_sha256(msg, key):
+        return hmac.new(
+            msg = bytes(str(msg), 'utf-8'),
+            key = bytes(str(key), 'utf-8'),
+            digestmod = hashlib.sha256
+        ).hexdigest()
+
+    @staticmethod
+    def encrypt_AES_GCM(msg, key):
+        aesCipher = AES.new(key[:32], AES.MODE_GCM)
+        ciphertext, authTag = aesCipher.encrypt_and_digest(bytes(msg, 'utf-8'))
+        return (ciphertext, aesCipher.nonce, authTag)
+
+    @staticmethod
+    def decrypt_AES_GCM(encryptedMsg, key):
+        (ciphertext, nonce, authTag) = encryptedMsg
+        aesCipher = AES.new(key, AES.MODE_GCM, nonce)
+        decrypted = aesCipher.decrypt_and_verify(ciphertext, authTag)
+        return decrypted
+
+    def set_keychain_password(self, password, salt):
+        # salt = Keychain.get_salts()[trustedDataCheck].encode("ISO-8859-1")
+        # derived_password = pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 50000, 64)
+        # self.derived_password = derived_password
+        pass
 
 
 class Key(models.Model):
@@ -122,10 +211,25 @@ class Key(models.Model):
         blank = False,
     )
 
-    password = models.CharField(
-        max_length = 200,
+    password_cipher = models.BinaryField(
+        max_length = 300,
         null = False,
         blank = False,
+        editable = True,
+    )
+
+    password_nonce = models.BinaryField(
+        max_length = 300,
+        null = False,
+        blank = False,
+        editable = True,
+    )
+
+    password_tag = models.BinaryField(
+        max_length = 300,
+        null = False,
+        blank = False,
+        editable = True,
     )
 
     keychain = models.ForeignKey(
@@ -133,4 +237,15 @@ class Key(models.Model):
         null = False,
         blank = False,
         on_delete = models.CASCADE,
+        editable = True,
     )
+
+    @property
+    def decrypted_password(self):
+        "Returns the decrypted password"
+        return Keychain.decrypt_AES_GCM((self.password_cipher, self.password_nonce, self.password_tag), self.keychain.derived_password[:32]).decode("utf-8")
+
+    @property
+    def password(self):
+        "Returns the password"
+        return bytes(self.password_cipher).hex(), bytes(self.password_nonce).hex(), bytes(self.password_tag).hex()

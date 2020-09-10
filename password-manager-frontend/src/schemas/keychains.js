@@ -1,7 +1,16 @@
 import { schema } from 'normalizr';
 
-export const keychain = new schema.Entity(
-    'keychains',
+export const key = new schema.Entity(
+    'key',
 );
 
-export const keychains = new schema.Array(keychain);
+export const keys = new schema.Array(key);
+
+
+export const keychain = new schema.Entity(
+    'keychain',
+    {
+        keys: keys
+    }
+);
+
