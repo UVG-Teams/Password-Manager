@@ -5,21 +5,24 @@ import {
     put,
 }from 'redux-saga/effects';
 
-import * as types from '../types/keychains';
-import * as actions from '../actions/keychains';
+import * as types from '../types/keys';
+import * as actions from '../actions/keys';
 import * as selectors from '../reducers';
 import { normalize } from 'normalizr';
 import * as http from '../utils/http';
-import * as schemas from '../schemas/keychains'
 import {
     API_BASE_URL,
 } from '../settings';
 
-function* createKeychain(action){
+
+function* setKey(action){
     try {
+        const keychain = yield select(selectors.getKeychain)
+
+        console.log("payload", action.payload)
         const response = yield call(
             fetch,
-            `${API_BASE_URL}/keychains/init_keychain/`,
+            `${API_BASE_URL}/keychains/${keychain.id}/setKey/`,
             {
                 method: 'POST',
                 body: JSON.stringify(action.payload),
@@ -30,20 +33,19 @@ function* createKeychain(action){
         )
         if (http.isSuccessful(response.status)) {
             const jsonResult = yield response.json();
-            console.log(jsonResult)
-            yield put(actions.completeInitializingKeychain(jsonResult));
+            yield put(actions.completeAddingKey(jsonResult));
         } else {
             const { non_field_errors } = yield response.json;
-            yield put(actions.failInitializingKeychain(non_field_errors[0]));
+            yield put(actions.failAddingKey(non_field_errors[0]));
         }
     } catch (error) {
-        yield put(actions.failInitializingKeychain('Connection failed!'))
+        yield put(actions.failAddingKey('Connection failed!'))
     }
 }
 
-export function* watchCreateKeychain(){
+export function* watchSetKey(){
     yield takeEvery(
-        types.INIT_KEYCHAIN_STARTED,
-        createKeychain,
+        types.ADD_KEY_STARTED,
+        setKey,
     )
 }

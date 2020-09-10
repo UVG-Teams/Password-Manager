@@ -1,16 +1,17 @@
 import { fork, all } from 'redux-saga/effects';
 
 import {
-    watchFetchKeychains,
-    watchAddKeychain,
-    watchRemoveKeychain,
+    watchCreateKeychain,
 } from './keychains';
+
+import {
+    watchSetKey,
+} from './keys'
 
 function* mainSaga(){
     yield all([
-        fork(watchFetchKeychains),
-        fork(watchAddKeychain),
-        fork(watchRemoveKeychain),
+        fork(watchCreateKeychain),
+        fork(watchSetKey)
     ])
 }
 

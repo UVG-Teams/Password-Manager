@@ -1,14 +1,18 @@
 import { combineReducers } from 'redux';
 
 import keychains, * as keychainSelectors from './keychains';
+import keys, * as keySelectors from './keys';
 
 const reducer = combineReducers({
-    keychain,
+    keychains,
+    keys,
 });
 
 export default reducer;
 
-export const getKeychain = (state, id) => keychainSelectors.getKeychain(state.keychains, id);
-export const getKeychains = state => keychainSelectors.getKeychains(state.keychains);
-export const isFetchingKeychains = state => keychainSelectors.isFetchingKeychains(state.keychains);
-export const getFetchingKeychainsError = state => keychainSelectors.getFetchingKeychainsError(state.keychains);
+export const getKeychain = state => keychainSelectors.getKeychain(state.keychains);
+
+export const getKey = (state, id) => keySelectors.getKey(state.keys, id)
+export const getKeys = state => keySelectors.getKeys(state.keys)
+export const isFetchingKeys = state => keySelectors.isFetchingKeys(state.keys)
+export const getFetchingKeysError = state => keySelectors.getFetchingKeysError(state.keys)
