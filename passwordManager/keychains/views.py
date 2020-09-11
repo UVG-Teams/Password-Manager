@@ -63,10 +63,9 @@ class KeychainViewSet(viewsets.ModelViewSet):
             trustedDataCheck = hmac
         )
 
-        serialized_keychain = KeychainSerializer(keychain).data
-        serialized_keychain['derived_password'] = keychain.derived_password.hex()
-
         if success:
+            serialized_keychain = KeychainSerializer(keychain).data
+            serialized_keychain['derived_password'] = keychain.derived_password.hex()
             return Response(serialized_keychain)
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 

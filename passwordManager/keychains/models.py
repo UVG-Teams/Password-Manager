@@ -57,7 +57,7 @@ class Keychain(models.Model):
                 print("="*50)
                 print('\nThe representation was corrupted\n')
                 print("="*50)
-
+                return False, None
 
         # Verificar si la contrase;a es valida para la representacion(keys)
         if derived_password == secret_password:
