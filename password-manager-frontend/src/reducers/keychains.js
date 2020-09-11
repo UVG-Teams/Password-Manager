@@ -21,7 +21,7 @@ const keychain = (state = null, action) => {
         case types.INIT_KEYCHAIN_FAILED: {
             return null;
         }
-        case types.DUMP_KEYCHAIN_COMPLETED: {
+        case types.LOGOUT_KEYCHAIN: {
             return null;
         }
         default: {

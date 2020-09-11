@@ -19,7 +19,7 @@ const byId = (state = {}, action) => {
             
             return newState;
         }
-        case typesKeychains.DUMP_KEYCHAIN_COMPLETED: {
+        case typesKeychains.LOGOUT_KEYCHAIN: {
             return {}
         }
         default: {
@@ -33,7 +33,7 @@ const order = (state = [], action) => {
         case types.FETCH_KEYS_COMPLETED: {
             return [...action.payload.order];
         }
-        case typesKeychains.DUMP_KEYCHAIN_COMPLETED: {
+        case typesKeychains.LOGOUT_KEYCHAIN: {
             return []
         }
         default: {

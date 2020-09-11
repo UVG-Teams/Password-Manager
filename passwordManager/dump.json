@@ -1,4 +1,10 @@
 {
-    "keys": {},
-    "hmac": "af9a5ebe8bcb73d4ff35d8935a2cc04166411021f299c9eacfbd47f7d2b7ee78"
+    "keys": {
+        "1f1dd880ba426f9ae7e2ab43a6dad46a7e7e8764ce6589ba6ee2b3b229619acf": [
+            "0d2504eb5ede9ab28b85",
+            "d5ab700df83bdc0c5b08ef7f9e81dd68",
+            "05f2a58c485450753697bdbca3f7fd08"
+        ]
+    },
+    "hmac": "459bab7e8c57d9884195f28f116a480ea353837c369a8dfc251f5eb04a51b5aa"
 }
