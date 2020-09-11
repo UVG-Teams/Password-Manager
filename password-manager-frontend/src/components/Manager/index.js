@@ -6,6 +6,9 @@ import * as actionsKeys from '../../actions/keys'
 import * as selectors from '../../reducers'
 
 import './styles.css';
+import {
+    API_BASE_URL,
+} from '../../settings';
 
 const Manager = ({
     keychain,
@@ -90,15 +93,20 @@ const Manager = ({
                             </button>
                         </div>
                         <div className="f2der">
-                            <label>Dump and logout</label>
                             <button
                                 type="submit"
                                 onClick={
                                     () => dump()
                                 }
                             >
-                                {'Dump'}
+                                {'Logout'}
                             </button>
+                            <a
+                                className="aButton"
+                                href={`${API_BASE_URL}/keychains/dump/?id=${keychain.id}&dp=${keychain.derived_password}`}
+                            >
+                                {'Dump'}
+                            </a>
                         </div>
                     </>
                 ) : (
