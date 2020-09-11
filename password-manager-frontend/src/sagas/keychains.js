@@ -72,6 +72,7 @@ function* loadKeychain(action){
             const keychain = yield select(selectors.getKeychain)
             yield put(actionsKeys.startFetchingKeys(keychain.id))
         } else {
+            alert("There is an error, maybe the keychain dump is corrupted")
             const { non_field_errors } = yield response.json;
             yield put(actions.failLoadingKeychain(non_field_errors[0]));
         }
