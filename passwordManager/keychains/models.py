@@ -13,10 +13,11 @@ class CorruptError(Exception):
     pass
 
 class Keychain(models.Model):
-    salt = models.CharField(
-        max_length = 250,
+    salt = models.BinaryField(
+        max_length = 300,
         null = False,
         blank = False,
+        editable = False,
     )
 
     derived_password = None
@@ -86,7 +87,7 @@ class Keychain(models.Model):
             keys[key.application] = key.password
 
         psw_hmac=Keychain.hmac_sha256(msg=keys, key=self.derived_password)
-        Keychain.save_salt(psw_hmac, self.salt)
+        Keychain.save_salt(psw_hmac, bytes(self.salt))
         Keychain.save_password(psw_hmac, self.derived_password)
         return keys, Keychain.hmac_sha256(msg=keys, key=self.derived_password)
 
@@ -196,7 +197,7 @@ class Keychain(models.Model):
 
     def get_salts():
         secrets = {}
-        with open('secret.json') as secret_file:
+        with open('salt_secrets.json') as secret_file:
             secrets = json.load(secret_file)
             return secrets
 
@@ -204,7 +205,7 @@ class Keychain(models.Model):
     def save_salt(keys_hmac, salt):
         secrets = Keychain.get_salts()
         secrets[keys_hmac] = salt.decode("ISO-8859-1")
-        with open('secret.json', 'w') as secret_file:
+        with open('salt_secrets.json', 'w') as secret_file:
             json.dump(secrets, secret_file, indent=4)
 
     @staticmethod

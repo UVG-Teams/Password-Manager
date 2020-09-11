@@ -1,4 +1,4 @@
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets, status
@@ -59,13 +59,21 @@ class KeychainViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=['post'])
-    def dump(self, request):
+    def dump(self, request, pk=None):
         keychain = self.get_object()
-        return keychain.dump()
+        # Se autentica para poder realizar acciones por medio del API
+        derived_password = request.data['derived_password']
+        keychain.derived_password = bytes.fromhex(derived_password)
+        keys, hmac = keychain.dump()
+        return Response({
+            "keys": keys,
+            "hmac": hmac,
+        })
 
     @action(detail=True, methods=['post'])
     def setKey(self, request, pk=None):
         keychain = self.get_object()
+        # Se autentica para poder realizar acciones por medio del API
         derived_password = request.data['derived_password']
         keychain.derived_password = bytes.fromhex(derived_password)
         name = request.data['name']
@@ -76,18 +84,26 @@ class KeychainViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def get(self, request, pk=None):
         keychain = self.get_object()
+        name = request.data['keyName']
+        # Se autentica para poder realizar acciones por medio del API
+        derived_password = request.data['derived_password']
+        keychain.derived_password = bytes.fromhex(derived_password)
         return Response(
             keychain.get(
-                name = request.data['name']
+                name = name
             )
         )
 
-    @action(detail=False, methods=['post'])
+    @action(detail=True, methods=['post'])
     def remove(self, request, pk=None):
         keychain = self.get_object()
+        name = request.data['keyName']
+        # Se autentica para poder realizar acciones por medio del API
+        derived_password = request.data['derived_password']
+        keychain.derived_password = bytes.fromhex(derived_password)
         return Response(
             keychain.remove(
-                name = request.data['name']
+                name = name
             )
         )
 

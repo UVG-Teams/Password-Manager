@@ -19,7 +19,10 @@ const keychain = (state = null, action) => {
             };
         }
         case types.INIT_KEYCHAIN_FAILED: {
-            return {};
+            return null;
+        }
+        case types.DUMP_KEYCHAIN_COMPLETED: {
+            return null;
         }
         default: {
             return state;

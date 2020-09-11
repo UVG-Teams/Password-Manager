@@ -2,6 +2,7 @@ import omit from 'lodash/omit';
 import { combineReducers } from 'redux';
 
 import * as types from '../types/keys';
+import * as typesKeychains from '../types/keychains';
 
 
 const byId = (state = {}, action) => {
@@ -18,8 +19,8 @@ const byId = (state = {}, action) => {
             
             return newState;
         }
-        case types.REMOVE_KEY_STARTED: {
-            return omit(state, action.payload.id);
+        case typesKeychains.DUMP_KEYCHAIN_COMPLETED: {
+            return {}
         }
         default: {
             return state;
@@ -32,8 +33,8 @@ const order = (state = [], action) => {
         case types.FETCH_KEYS_COMPLETED: {
             return [...action.payload.order];
         }
-        case types.REMOVE_KEY_STARTED: {
-            return state.filter(id => id !== action.payload.id);
+        case typesKeychains.DUMP_KEYCHAIN_COMPLETED: {
+            return []
         }
         default: {
             return state;

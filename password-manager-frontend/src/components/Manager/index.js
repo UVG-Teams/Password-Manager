@@ -15,6 +15,7 @@ const Manager = ({
     setKey,
     getKeyPassword,
     deleteKey,
+    dump,
 }) => {
     const [keychainPassword, changeKeychainPassword] = useState('')
 
@@ -28,110 +29,129 @@ const Manager = ({
     return (
     <div className="pageManager">
         <div className="forms">
-            <div className="f1iz">
-                <label>Init Keychain</label>
-                <input
-                    type="text"
-                    placeholder="Keychain Password"
-                    value={ keychainPassword }
-                    onChange={e => changeKeychainPassword(e.target.value)}
-                />
-                <button
-                    type="submit"
-                    onClick={
-                        () => initKeychain(keychainPassword)
-                    }
-                >
-                    {'Enviar'}
-                </button>
-            </div>
-            <div className="f2iz">
-                <label>Set key</label>
-                <input
-                    type="text"
-                    placeholder="Aplicacion"
-                    value={ keyApp }
-                    onChange={e => changeKeyApp(e.target.value)}
-                />
-                <input
-                    type="text"
-                    placeholder="Password"
-                    value={ keyPassword }
-                    onChange={e => changeKeyPassword(e.target.value)}
-                />
-                <button
-                    type="submit"
-                    onClick={
-                        () => setKey(keyApp, keyPassword)
-                    }
-                >
-                    {'Guardar'}
-                </button>
-            </div>
-            <div className="f1der">
-                <label>Get</label>
-                <input
-                    type="text"
-                    placeholder="Aplicacion"
-                    value={ appGet }
-                    onChange={e => changeAppGet(e.target.value)}
-                />
-                <button
-                    type="submit"
-                    onClick={
-                        () => getKeyPassword(appGet)
-                    }
-                >
-                    {'Buscar'}
-                </button>
-            </div>
-            <div className="f2der">
-                <label>Remove</label>
-                <input
-                    type="text"
-                    placeholder="Aplicacion"
-                    value={ appDelete }
-                    onChange={e => changeAppDelete(e.target.value)}
-                />
-                <button
-                    type="submit"
-                    onClick={
-                        () => deleteKey(appDelete)
-                    }
-                >
-                    {'Eliminar'}
-                </button>
-            </div>
+            {
+                keychain ? (
+                    <>
+                        <div className="f2iz">
+                            <label>Set key</label>
+                            <input
+                                type="text"
+                                placeholder="Aplicacion"
+                                value={ keyApp }
+                                onChange={e => changeKeyApp(e.target.value)}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Password"
+                                value={ keyPassword }
+                                onChange={e => changeKeyPassword(e.target.value)}
+                            />
+                            <button
+                                type="submit"
+                                onClick={
+                                    () => setKey(keyApp, keyPassword)
+                                }
+                            >
+                                {'Guardar'}
+                            </button>
+                        </div>
+                        <div className="f1der">
+                            <label>Get Password</label>
+                            <input
+                                type="text"
+                                placeholder="Aplicacion"
+                                value={ appGet }
+                                onChange={e => changeAppGet(e.target.value)}
+                            />
+                            <button
+                                type="submit"
+                                onClick={
+                                    () => getKeyPassword(appGet)
+                                }
+                            >
+                                {'Buscar'}
+                            </button>
+                        </div>
+                        <div className="f2der">
+                            <label>Remove</label>
+                            <input
+                                type="text"
+                                placeholder="Aplicacion"
+                                value={ appDelete }
+                                onChange={e => changeAppDelete(e.target.value)}
+                            />
+                            <button
+                                type="submit"
+                                onClick={
+                                    () => deleteKey(appDelete)
+                                }
+                            >
+                                {'Eliminar'}
+                            </button>
+                        </div>
+                        <div className="f2der">
+                            <label>Dump and logout</label>
+                            <button
+                                type="submit"
+                                onClick={
+                                    () => dump()
+                                }
+                            >
+                                {'Dump'}
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="f1iz">
+                            <label>Init Keychain</label>
+                            <input
+                                type="text"
+                                placeholder="Keychain Password"
+                                value={ keychainPassword }
+                                onChange={e => changeKeychainPassword(e.target.value)}
+                            />
+                            <button
+                                type="submit"
+                                onClick={
+                                    () => initKeychain(keychainPassword)
+                                }
+                            >
+                                {'Enviar'}
+                            </button>
+                        </div>
+                    </>
+                )
+            }
         </div>
         {
             keychain ? (
-                <div className="tableView">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Aplicación</th>
-                                <th>Contraseña</th>
-                            </tr>
-                        </thead>
-                        {
-                            console.log(keys)
-                        }
-                        {
-                            keys.length > 0 && !isLoading && (
-                                <tbody>
-                                    {
-                                        keys.map(key =>
-                                            <tr key={ key.id }>
-                                                <th>{ key.application }</th>
-                                                <th>{ key.password_cipher + key.password_nonce + key.password_tag}</th>
-                                            </tr>
-                                        )
-                                    }
-                                </tbody>
-                            )
-                        }
-                    </table>
-                </div>
+                <>
+                    <div className="tableView">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Aplicación</th>
+                                    <th>Contraseña</th>
+                                </tr>
+                            </thead>
+                            {
+                                keys.length > 0 && !isLoading && (
+                                    <tbody>
+                                        {
+                                            keys.map(key =>
+                                                <tr key={ key.id }>
+                                                    <th>{ key.application }</th>
+                                                    <th>{ key.password_cipher + key.password_nonce + key.password_tag}</th>
+                                                </tr>
+                                            )
+                                        }
+                                    </tbody>
+                                )
+                            }
+                        </table>
+                    </div>
+                </>
             ) : (
                 <></>
             )
@@ -156,12 +176,13 @@ export default connect(
             }))
         },
         getKeyPassword(app) {
-            console.log(app)
-            // dispatch(actions.startInitializingKeychain(password))
+            dispatch(actionsKeys.startGettingKeyPassword(app))
         },
         deleteKey(app) {
-            console.log(app)
-            // dispatch(actions.startInitializingKeychain(password))
-        }
+            dispatch(actionsKeys.startRemovingKey(app))
+        },
+        dump() {
+            dispatch(actions.startDumpingKeychain())
+        },
     }),
 )(Manager);

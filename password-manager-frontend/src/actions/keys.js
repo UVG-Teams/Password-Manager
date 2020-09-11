@@ -23,6 +23,8 @@ export const failFetchingKeys = error => ({
     },
 });
 
+
+
 export const startAddingKey = key => ({
     type: types.ADD_KEY_STARTED,
     payload: key
@@ -40,10 +42,35 @@ export const failAddingKey = (tempId, error) => ({
     },
 });
 
-export const startRemovingKey = id => ({
+
+
+export const startGettingKeyPassword = keyName => ({
+    type: types.GET_KEY_PASSWORD_STARTED,
+    payload: {
+        keyName,
+    }
+});
+
+export const completeGettingKeyPassword = keyPassword => ({
+    type: types.GET_KEY_PASSWORD_COMPLETED,
+    payload: {
+        keyPassword,
+    }
+});
+
+export const failGettingKeyPassword = error => ({
+    type: types.GET_KEY_PASSWORD_FAILED,
+    payload: {
+        error,
+    },
+});
+
+
+
+export const startRemovingKey = keyName => ({
     type: types.REMOVE_KEY_STARTED,
     payload: {
-        id,
+        keyName,
     },
 });
 
@@ -51,10 +78,9 @@ export const completeRemovingKey = () => ({
     type: types.REMOVE_KEY_COMPLETED,
 });
 
-export const failRemovingKey = (id, error) => ({
+export const failRemovingKey = error => ({
     type: types.REMOVE_KEY_FAILED,
     payload: {
-        id,
         error,
     },
 });
