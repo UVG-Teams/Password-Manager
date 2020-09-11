@@ -15,6 +15,7 @@ const Manager = ({
     setKey,
     getKeyPassword,
     deleteKey,
+    dump,
 }) => {
     const [keychainPassword, changeKeychainPassword] = useState('')
 
@@ -86,6 +87,17 @@ const Manager = ({
                                 }
                             >
                                 {'Eliminar'}
+                            </button>
+                        </div>
+                        <div className="f2der">
+                            <label>Dump and logout</label>
+                            <button
+                                type="submit"
+                                onClick={
+                                    () => dump()
+                                }
+                            >
+                                {'Dump'}
                             </button>
                         </div>
                     </>
@@ -168,6 +180,9 @@ export default connect(
         },
         deleteKey(app) {
             dispatch(actionsKeys.startRemovingKey(app))
-        }
+        },
+        dump() {
+            dispatch(actions.startDumpingKeychain())
+        },
     }),
 )(Manager);

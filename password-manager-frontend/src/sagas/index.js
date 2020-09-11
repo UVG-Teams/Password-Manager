@@ -2,6 +2,7 @@ import { fork, all } from 'redux-saga/effects';
 
 import {
     watchCreateKeychain,
+    watchDumpKeychain,
 } from './keychains';
 
 import {
@@ -14,6 +15,7 @@ import {
 function* mainSaga(){
     yield all([
         fork(watchCreateKeychain),
+        fork(watchDumpKeychain),
         fork(watchSetKey),
         fork(watchFetchKeys),
         fork(watchGetKeyPassword),

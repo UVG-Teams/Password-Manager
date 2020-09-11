@@ -1,4 +1,4 @@
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets, status
@@ -59,9 +59,16 @@ class KeychainViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=['post'])
-    def dump(self, request):
+    def dump(self, request, pk=None):
         keychain = self.get_object()
-        return keychain.dump()
+        # Se autentica para poder realizar acciones por medio del API
+        derived_password = request.data['derived_password']
+        keychain.derived_password = bytes.fromhex(derived_password)
+        keys, hmac = keychain.dump()
+        return Response({
+            "keys": keys,
+            "hmac": hmac,
+        })
 
     @action(detail=True, methods=['post'])
     def setKey(self, request, pk=None):
