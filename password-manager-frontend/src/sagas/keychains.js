@@ -47,3 +47,43 @@ export function* watchCreateKeychain(){
         createKeychain,
     )
 }
+
+
+
+function* loadKeychain(action){
+    try {
+        console.log(action.payload)
+        const formData = new FormData();
+        formData.append('keychainFile', action.payload.keychainFile)
+        formData.append('password', action.payload.password)
+
+        const response = yield call(
+            fetch,
+            `${API_BASE_URL}/keychains/load/`,
+            {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    // 'Content-Type': 'application/json',
+                    // 'Content-Type': 'multipart/form-data',
+                }
+            }
+        )
+        if (http.isSuccessful(response.status)) {
+            const jsonResult = yield response.json();
+            yield put(actions.completeLoadingKeychain(jsonResult));
+        } else {
+            const { non_field_errors } = yield response.json;
+            yield put(actions.failLoadingKeychain(non_field_errors[0]));
+        }
+    } catch (error) {
+        yield put(actions.failLoadingKeychain('Connection failed!'))
+    }
+}
+
+export function* watchLoadKeychain(){
+    yield takeEvery(
+        types.LOAD_KEYCHAIN_STARTED,
+        loadKeychain,
+    )
+}

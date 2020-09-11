@@ -24,3 +24,26 @@ export const failInitializingKeychain = error => ({
 export const loggingOutKeychain = () => ({
     type: types.LOGOUT_KEYCHAIN,
 });
+
+
+
+
+export const startLoadingKeychain = (password, keychainFile) => ({
+    type: types.LOAD_KEYCHAIN_STARTED,
+    payload: {
+        password,
+        keychainFile,
+    }
+});
+
+export const completeLoadingKeychain = keychain => ({
+    type: types.LOAD_KEYCHAIN_COMPLETED,
+    payload: keychain
+});
+
+export const failLoadingKeychain = error => ({
+    type: types.LOAD_KEYCHAIN_FAILED,
+    payload: {
+        error,
+    }
+});

@@ -202,7 +202,7 @@ export default connect(
         },
         loadKeychain(password, keychainFile) {
             console.log(password, keychainFile)
-            // dispatch(actions.startInitializingKeychain(password))
+            dispatch(actions.startLoadingKeychain(password, keychainFile))
         },
         setKey(app, password) {
             dispatch(actionsKeys.startAddingKey({

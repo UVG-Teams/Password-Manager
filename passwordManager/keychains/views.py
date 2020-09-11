@@ -49,15 +49,26 @@ class KeychainViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def load(self, request):
-        return Response(
-            KeychainSerializer(
-                Keychain.load(
-                    password = request.data['password'],
-                    representation = request.data['keys'],
-                    trustedDataCheck = request.data['sha256']
-                )
-            ).data
+        password = request.data['password']
+        files = request.FILES
+        data = files['keychainFile'].read().decode('utf-8').replace("'", '"')
+
+        keychainData = json.loads(data)
+        hmac = keychainData['hmac']
+        keys = keychainData['keys']
+
+        success, keychain = Keychain.load(
+            password = password,
+            representation = keys,
+            trustedDataCheck = hmac
         )
+
+        if success:
+            return Response(
+                KeychainSerializer(keychain).data
+            )
+        else:
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
     @action(detail=False, methods=['get'])
     def dump(self, request):
@@ -67,6 +78,14 @@ class KeychainViewSet(viewsets.ModelViewSet):
         derived_password = self.request.query_params.get('dp')
         keychain.derived_password = bytes.fromhex(derived_password)
         keys, hmac = keychain.dump()
+
+        print("-"*100)
+        print("salt", bytes(keychain.salt))
+        print("deri pass", bytes.fromhex(derived_password))
+        print("deri pass", keychain.derived_password)
+        print("hmac", hmac)
+        print("keys", keys)
+        print("-"*100)
 
         with open('dump.json', 'w') as dump_file:
             json.dump(
