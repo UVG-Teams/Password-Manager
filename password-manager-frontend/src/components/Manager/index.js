@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { connect } from 'react-redux';
 
 import * as actions from '../../actions/keychains'
@@ -15,18 +15,18 @@ const Manager = ({
     keys,
     isLoading,
     initKeychain,
+    loadKeychain,
     setKey,
     getKeyPassword,
     deleteKey,
-    dump,
+    logoutKeychain,
 }) => {
     const [keychainPassword, changeKeychainPassword] = useState('')
-
+    const [keychainLoadPassword, changeKeychainLoadPassword] = useState('')
+    const fileRef = useRef();
     const [keyApp, changeKeyApp] = useState('')
     const [keyPassword, changeKeyPassword] = useState('')
-    
     const [appGet, changeAppGet] = useState('')
-    
     const [appDelete, changeAppDelete] = useState('')
      
     return (
@@ -96,7 +96,7 @@ const Manager = ({
                             <button
                                 type="submit"
                                 onClick={
-                                    () => dump()
+                                    () => logoutKeychain()
                                 }
                             >
                                 {'Logout'}
@@ -123,6 +123,29 @@ const Manager = ({
                                 type="submit"
                                 onClick={
                                     () => initKeychain(keychainPassword)
+                                }
+                            >
+                                {'Enviar'}
+                            </button>
+                        </div>
+                        <div className="f1der">
+                            <label>Load Keychain</label>
+                            <input
+                                type="text"
+                                placeholder="Keychain Password"
+                                value={ keychainLoadPassword }
+                                onChange={e => changeKeychainLoadPassword(e.target.value)}
+                            />
+                            <input
+                                type="file"
+                                multiple={ false }
+                                accept=".json"
+                                ref={ fileRef }
+                            />
+                            <button
+                                type="submit"
+                                onClick={
+                                    () => loadKeychain(keychainLoadPassword, fileRef.current.files[0])
                                 }
                             >
                                 {'Enviar'}
@@ -177,6 +200,10 @@ export default connect(
         initKeychain(password) {
             dispatch(actions.startInitializingKeychain(password))
         },
+        loadKeychain(password, keychainFile) {
+            console.log(password, keychainFile)
+            dispatch(actions.startLoadingKeychain(password, keychainFile))
+        },
         setKey(app, password) {
             dispatch(actionsKeys.startAddingKey({
                 "name": app,
@@ -189,8 +216,8 @@ export default connect(
         deleteKey(app) {
             dispatch(actionsKeys.startRemovingKey(app))
         },
-        dump() {
-            dispatch(actions.startDumpingKeychain())
+        logoutKeychain() {
+            dispatch(actions.loggingOutKeychain())
         },
     }),
 )(Manager);

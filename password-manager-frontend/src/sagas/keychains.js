@@ -50,39 +50,40 @@ export function* watchCreateKeychain(){
 
 
 
-function* dumpKeychain(action){
+function* loadKeychain(action){
     try {
-        const keychain = yield select(selectors.getKeychain)
+        console.log(action.payload)
+        const formData = new FormData();
+        formData.append('keychainFile', action.payload.keychainFile)
+        formData.append('password', action.payload.password)
 
         const response = yield call(
             fetch,
-            `${API_BASE_URL}/keychains/${keychain.id}/dump/`,
+            `${API_BASE_URL}/keychains/load/`,
             {
                 method: 'POST',
-                body: JSON.stringify({
-                    "derived_password": keychain.derived_password,
-                }),
+                body: formData,
                 headers: {
-                    'Content-Type': 'application/json',
+                    // 'Content-Type': 'application/json',
+                    // 'Content-Type': 'multipart/form-data',
                 }
             }
         )
         if (http.isSuccessful(response.status)) {
             const jsonResult = yield response.json();
-            console.log(jsonResult)
-            yield put(actions.completeDumpingKeychain(jsonResult));
+            yield put(actions.completeLoadingKeychain(jsonResult));
         } else {
             const { non_field_errors } = yield response.json;
-            yield put(actions.failDumpingKeychain(non_field_errors[0]));
+            yield put(actions.failLoadingKeychain(non_field_errors[0]));
         }
     } catch (error) {
-        yield put(actions.failDumpingKeychain('Connection failed!'))
+        yield put(actions.failLoadingKeychain('Connection failed!'))
     }
 }
 
-export function* watchDumpKeychain(){
+export function* watchLoadKeychain(){
     yield takeEvery(
-        types.DUMP_KEYCHAIN_STARTED,
-        dumpKeychain,
+        types.LOAD_KEYCHAIN_STARTED,
+        loadKeychain,
     )
 }

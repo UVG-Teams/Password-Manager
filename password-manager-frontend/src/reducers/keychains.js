@@ -7,21 +7,25 @@ import * as types from '../types/keychains';
 const keychain = (state = null, action) => {
     switch(action.type) {
         case types.INIT_KEYCHAIN_STARTED: {
-            return {
-                ...action.payload,
-                isConfirmed: false
-            };
+            return null;
+        }
+        case types.LOAD_KEYCHAIN_STARTED: {
+            return null;
         }
         case types.INIT_KEYCHAIN_COMPLETED: {
             return {
                 ...action.payload,
-                isConfirmed: true,
+            };
+        }
+        case types.LOAD_KEYCHAIN_COMPLETED: {
+            return {
+                ...action.payload,
             };
         }
         case types.INIT_KEYCHAIN_FAILED: {
             return null;
         }
-        case types.DUMP_KEYCHAIN_COMPLETED: {
+        case types.LOGOUT_KEYCHAIN: {
             return null;
         }
         default: {

@@ -21,17 +21,28 @@ export const failInitializingKeychain = error => ({
 
 
 
-export const startDumpingKeychain = () => ({
-    type: types.DUMP_KEYCHAIN_STARTED,
+export const loggingOutKeychain = () => ({
+    type: types.LOGOUT_KEYCHAIN,
 });
 
-export const completeDumpingKeychain = dump => ({
-    type: types.DUMP_KEYCHAIN_COMPLETED,
-    payload: dump,
+
+
+
+export const startLoadingKeychain = (password, keychainFile) => ({
+    type: types.LOAD_KEYCHAIN_STARTED,
+    payload: {
+        password,
+        keychainFile,
+    }
 });
 
-export const failDumpingKeychain = error => ({
-    type: types.DUMP_KEYCHAIN_FAILED,
+export const completeLoadingKeychain = keychain => ({
+    type: types.LOAD_KEYCHAIN_COMPLETED,
+    payload: keychain
+});
+
+export const failLoadingKeychain = error => ({
+    type: types.LOAD_KEYCHAIN_FAILED,
     payload: {
         error,
     }
