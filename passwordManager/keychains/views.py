@@ -1,9 +1,10 @@
-from django.http import Http404, JsonResponse
+from django.http import Http404, JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+import json
 
 from keychains.models import Keychain, Key
 from keychains.serializers import KeychainSerializer, KeySerializer
@@ -58,17 +59,31 @@ class KeychainViewSet(viewsets.ModelViewSet):
             ).data
         )
 
-    @action(detail=True, methods=['post'])
-    def dump(self, request, pk=None):
-        keychain = self.get_object()
+    @action(detail=False, methods=['get'])
+    def dump(self, request):
+        keychain_id = self.request.query_params.get('id')
+        keychain = Keychain.objects.get(id=keychain_id)
         # Se autentica para poder realizar acciones por medio del API
-        derived_password = request.data['derived_password']
+        derived_password = self.request.query_params.get('dp')
         keychain.derived_password = bytes.fromhex(derived_password)
         keys, hmac = keychain.dump()
-        return Response({
-            "keys": keys,
-            "hmac": hmac,
-        })
+
+        with open('dump.json', 'w') as dump_file:
+            json.dump(
+                {
+                    "keys": keys,
+                    "hmac": hmac,
+                },
+                dump_file,
+                indent = 4
+            )
+
+        with open('dump.json') as dump_file:
+            response = HttpResponse(dump_file.read(), content_type="application/json")
+            response['status_code'] = 200
+            response['Content-Disposition'] = 'attachment; filename="dump.json"'
+
+        return response
 
     @action(detail=True, methods=['post'])
     def setKey(self, request, pk=None):
