@@ -47,20 +47,17 @@ class Keychain(models.Model):
         salt = Keychain.get_salts()[trustedDataCheck].encode("ISO-8859-1")
         secret_password = Keychain.get_passwords()[trustedDataCheck].encode("ISO-8859-1")
         derived_password = pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 50000, 64)
-        print("="*100)
-        print("salt", salt)
-        print("deri pass", secret_password)
-        print("deri pass", derived_password)
-        print("hmac", trustedDataCheck)
-        print("hmac", Keychain.hmac_sha256(msg=representation, key=derived_password))
-        print("="*100)
 
         if trustedDataCheck:
             try:
                 if Keychain.hmac_sha256(msg=representation, key=derived_password) != trustedDataCheck:
                     raise CorruptError
             except CorruptError:
-                print('The representation was corrupted')
+                print("="*50)
+                print("="*50)
+                print('\nThe representation was corrupted\n')
+                print("="*50)
+
 
         # Verificar si la contrase;a es valida para la representacion(keys)
         if derived_password == secret_password:
@@ -281,4 +278,4 @@ class Key(models.Model):
     @property
     def password(self):
         "Returns the password"
-        return bytes(self.password_cipher).hex(), bytes(self.password_nonce).hex(), bytes(self.password_tag).hex()
+        return [bytes(self.password_cipher).hex(), bytes(self.password_nonce).hex(), bytes(self.password_tag).hex()]

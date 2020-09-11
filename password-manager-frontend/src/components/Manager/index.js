@@ -201,7 +201,6 @@ export default connect(
             dispatch(actions.startInitializingKeychain(password))
         },
         loadKeychain(password, keychainFile) {
-            console.log(password, keychainFile)
             dispatch(actions.startLoadingKeychain(password, keychainFile))
         },
         setKey(app, password) {

@@ -63,12 +63,12 @@ class KeychainViewSet(viewsets.ModelViewSet):
             trustedDataCheck = hmac
         )
 
+        serialized_keychain = KeychainSerializer(keychain).data
+        serialized_keychain['derived_password'] = keychain.derived_password.hex()
+
         if success:
-            return Response(
-                KeychainSerializer(keychain).data
-            )
-        else:
-            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(serialized_keychain)
+        return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
     @action(detail=False, methods=['get'])
     def dump(self, request):
@@ -78,14 +78,6 @@ class KeychainViewSet(viewsets.ModelViewSet):
         derived_password = self.request.query_params.get('dp')
         keychain.derived_password = bytes.fromhex(derived_password)
         keys, hmac = keychain.dump()
-
-        print("-"*100)
-        print("salt", bytes(keychain.salt))
-        print("deri pass", bytes.fromhex(derived_password))
-        print("deri pass", keychain.derived_password)
-        print("hmac", hmac)
-        print("keys", keys)
-        print("-"*100)
 
         with open('dump.json', 'w') as dump_file:
             json.dump(

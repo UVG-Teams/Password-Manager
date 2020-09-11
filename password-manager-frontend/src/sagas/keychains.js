@@ -7,6 +7,7 @@ import {
 
 import * as types from '../types/keychains';
 import * as actions from '../actions/keychains';
+import * as actionsKeys from '../actions/keys';
 import * as selectors from '../reducers';
 import { normalize } from 'normalizr';
 import * as http from '../utils/http';
@@ -52,7 +53,6 @@ export function* watchCreateKeychain(){
 
 function* loadKeychain(action){
     try {
-        console.log(action.payload)
         const formData = new FormData();
         formData.append('keychainFile', action.payload.keychainFile)
         formData.append('password', action.payload.password)
@@ -63,15 +63,14 @@ function* loadKeychain(action){
             {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    // 'Content-Type': 'application/json',
-                    // 'Content-Type': 'multipart/form-data',
-                }
+                headers: {}
             }
         )
         if (http.isSuccessful(response.status)) {
             const jsonResult = yield response.json();
             yield put(actions.completeLoadingKeychain(jsonResult));
+            const keychain = yield select(selectors.getKeychain)
+            yield put(actionsKeys.startFetchingKeys(keychain.id))
         } else {
             const { non_field_errors } = yield response.json;
             yield put(actions.failLoadingKeychain(non_field_errors[0]));
