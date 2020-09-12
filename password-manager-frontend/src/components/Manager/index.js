@@ -20,6 +20,8 @@ const Manager = ({
     getKeyPassword,
     deleteKey,
     logoutKeychain,
+    decodeNames,
+    decodedApps,
 }) => {
     const [keychainPassword, changeKeychainPassword] = useState('')
     const [keychainLoadPassword, changeKeychainLoadPassword] = useState('')
@@ -52,7 +54,11 @@ const Manager = ({
                             <button
                                 type="submit"
                                 onClick={
-                                    () => setKey(keyApp, keyPassword)
+                                    () => {
+                                        setKey(keyApp, keyPassword)
+                                        changeKeyApp('')
+                                        changeKeyPassword('')
+                                    }
                                 }
                             >
                                 {'Guardar'}
@@ -69,7 +75,10 @@ const Manager = ({
                             <button
                                 type="submit"
                                 onClick={
-                                    () => getKeyPassword(appGet)
+                                    () => {
+                                        getKeyPassword(appGet)
+                                        changeAppGet('')
+                                    }
                                 }
                             >
                                 {'Buscar'}
@@ -86,7 +95,10 @@ const Manager = ({
                             <button
                                 type="submit"
                                 onClick={
-                                    () => deleteKey(appDelete)
+                                    () => {
+                                        deleteKey(appDelete)
+                                        changeAppDelete('')
+                                    }
                                 }
                             >
                                 {'Eliminar'}
@@ -122,7 +134,10 @@ const Manager = ({
                             <button
                                 type="submit"
                                 onClick={
-                                    () => initKeychain(keychainPassword)
+                                    () => {
+                                        initKeychain(keychainPassword)
+                                        changeKeychainPassword('')
+                                    }
                                 }
                             >
                                 {'Enviar'}
@@ -145,7 +160,10 @@ const Manager = ({
                             <button
                                 type="submit"
                                 onClick={
-                                    () => loadKeychain(keychainLoadPassword, fileRef.current.files[0])
+                                    () => {
+                                        loadKeychain(keychainLoadPassword, fileRef.current.files[0])
+                                        changeKeychainLoadPassword('')
+                                    }
                                 }
                             >
                                 {'Enviar'}
@@ -162,7 +180,19 @@ const Manager = ({
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Aplicación</th>
+                                    <th>
+                                        {'Aplicación\t\t\t\t'}
+                                        <button
+                                            type="submit"
+                                            onClick={
+                                                () => {
+                                                    decodeNames(keys.map(key => key.application))
+                                                }
+                                            }
+                                        >
+                                            {'Decodificar'}
+                                        </button>
+                                    </th>
                                     <th>Contraseña</th>
                                 </tr>
                             </thead>
@@ -172,7 +202,7 @@ const Manager = ({
                                         {
                                             keys.map(key =>
                                                 <tr key={ key.id }>
-                                                    <th>{ key.application }</th>
+                                                    <th>{ decodedApps[key.application] || key.application }</th>
                                                     <th>{ key.password_cipher + key.password_nonce + key.password_tag}</th>
                                                 </tr>
                                             )
@@ -195,6 +225,7 @@ export default connect(
         keychain: selectors.getKeychain(state),
         keys: selectors.getKeys(state),
         isLoading: selectors.isFetchingKeys(state),
+        decodedApps: selectors.getdecodedKeys(state),
     }),
     dispatch => ({
         initKeychain(password) {
@@ -218,5 +249,8 @@ export default connect(
         logoutKeychain() {
             dispatch(actions.loggingOutKeychain())
         },
+        decodeNames(names) {
+            dispatch(actionsKeys.startDecodingKeys(names))
+        }
     }),
 )(Manager);

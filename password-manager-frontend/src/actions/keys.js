@@ -84,3 +84,26 @@ export const failRemovingKey = error => ({
         error,
     },
 });
+
+
+
+export const startDecodingKeys = apps => ({
+    type: types.DECODE_KEYS_STARTED,
+    payload: {
+        apps,
+    },
+});
+
+export const completeDecodingKeys = decodedApps => ({
+    type: types.DECODE_KEYS_COMPLETED,
+    payload: {
+        decodedApps,
+    }
+});
+
+export const failDecodingKeys = error => ({
+    type: types.DECODE_KEYS_FAILED,
+    payload: {
+        error,
+    },
+});

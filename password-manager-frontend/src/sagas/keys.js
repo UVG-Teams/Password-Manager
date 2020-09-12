@@ -168,3 +168,39 @@ export function* watchRemoveKey(){
         removeKey,
     )
 }
+
+
+
+function* getKeyAppName(action){
+    try {
+        const response = yield call(
+            fetch,
+            `${API_BASE_URL}/keychains/decodedApps/`,
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    ...action.payload,
+                }),
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }
+        )
+        if (http.isSuccessful(response.status)) {
+            const jsonResult = yield response.json();
+            yield put(actions.completeDecodingKeys(jsonResult));
+        } else {
+            const { non_field_errors } = yield response.json;
+            yield put(actions.failDecodingKeys(non_field_errors[0]));
+        }
+    } catch (error) {
+        yield put(actions.failDecodingKeys('Connection failed!'))
+    }
+}
+
+export function* watchGetKeyAppName(){
+    yield takeEvery(
+        types.DECODE_KEYS_STARTED,
+        getKeyAppName,
+    )
+}
