@@ -76,15 +76,38 @@ const error = (state = null, action) => {
     }
 };
 
+const decodedKeys = (state = {}, action) => {
+    switch(action.type) {
+        case types.DECODE_KEYS_STARTED: {
+            return {}
+        }
+        case types.DECODE_KEYS_COMPLETED: {
+            return {...action.payload.decodedApps}
+        }
+        case types.DECODE_KEYS_FAILED: {
+            return {}
+        }
+        case typesKeychains.LOGOUT_KEYCHAIN: {
+            return {};
+        }
+        default: {
+            return state;
+        }
+    }
+}
+
 
 export default combineReducers({
     byId,
     order,
     isFetching,
     error,
+    decodedKeys,
 });
 
 export const getKey = (state, id) => state.byId[id];
 export const getKeys = state => state.order.map(id => getKey(state, id));
 export const isFetchingKeys = state => state.isFetching;
 export const getFetchingKeysError = state => state.error;
+
+export const getdecodedKeys = state => state.decodedKeys;

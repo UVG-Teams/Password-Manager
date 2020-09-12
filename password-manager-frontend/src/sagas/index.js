@@ -10,6 +10,7 @@ import {
     watchFetchKeys,
     watchGetKeyPassword,
     watchRemoveKey,
+    watchGetKeyAppName,
 } from './keys'
 
 function* mainSaga(){
@@ -20,6 +21,7 @@ function* mainSaga(){
         fork(watchGetKeyPassword),
         fork(watchRemoveKey),
         fork(watchLoadKeychain),
+        fork(watchGetKeyAppName),
     ])
 }
 

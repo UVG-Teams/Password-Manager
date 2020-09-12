@@ -23,6 +23,7 @@ class KeychainViewSet(viewsets.ModelViewSet):
                     'list': True,
                     'init_keychain': True,
                     'load': True,
+                    'decodedApps': True,
                 },
                 'instance': {
                     'retrieve': True,
@@ -139,6 +140,16 @@ class KeychainViewSet(viewsets.ModelViewSet):
         return Response(
             [KeySerializer(key).data for key in keys]
         )
+
+    @action(detail=False, methods=['post'])
+    def decodedApps(self, request):
+        keys = request.data['apps']
+        decoded_apps = {}
+        with open('app_names.json') as secret_file:
+            apps = json.load(secret_file)
+            for key in keys:
+                decoded_apps[key] = apps[key]
+        return Response(decoded_apps)
 
 
 class KeyViewSet(viewsets.ModelViewSet):
